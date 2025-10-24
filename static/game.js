@@ -22,7 +22,7 @@ let skipUses = 0;
 
 
 // ELEMENTS
-let startBtn, skipBtn, revealBtn, submitBtn, guessInput, timerEl, scoreEl, messageEl, svgRoot;
+let startBtn, skipBtn, revealBtn, submitBtn, restartBtn, guessInput, timerEl, scoreEl, messageEl, svgRoot;
 
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase().replace(/\s+/g, "").replace(/state/g, "").replace(/-/g, "");
@@ -111,6 +111,8 @@ function showStateNameOnMap(el, color = "black") {
         messageEl.textContent = ` ${correctCount}, Your score is very low 😔, try harder next time!!`
       }
       gameRunning = false;
+      document.getElementById("restartBtn").style.display = "block";
+
       stopPerStateTimer();
       return;
     }
@@ -190,7 +192,7 @@ function submitGuessHandler() {
 function skipHandler() {
   if (!gameRunning || !currentState) return;
   if (skipUses >= MAX_SKIP_USES) {
-    messageEl.textContent = "🚫 You’ve used all your skip!";
+    messageEl.textContent = "🚫 You’ve used all your skips!";
     return;
   }
 
@@ -232,6 +234,25 @@ function startGameHandler() {
     alert("SVG map not found (id 'nigeria-map'). Make sure your SVG is inline and has that id.");
     return;
   }
+
+  stopPerStateTimer(); // stop any running timer
+
+  correctCount = 0;
+  skipUses = 0;
+  revealUses = 0;
+  currentState = null;
+  gameRunning = true;
+
+  // Remove all text labels (state names)
+  svgRoot.querySelectorAll("text").forEach(t => t.remove());
+
+  // Reset all state colors and guessed flags
+  allStates = Array.from(svgRoot.querySelectorAll("path"));
+  allStates.forEach(p => {
+    p.style.fill = "#ccc";
+    p.dataset.guessed = "";
+  });
+
   // fetch all state paths (only direct path elements inside svg)
   allStates = Array.from(svgRoot.querySelectorAll("path"));
   // reset guessed flags
@@ -244,6 +265,9 @@ function startGameHandler() {
   messageEl.textContent = "Game started! Good luck.";
   pickRandomState();
 }
+
+
+
 
 // RULES TOGGLE FUNCTIONALITY
 document.addEventListener("DOMContentLoaded", () => {
@@ -264,6 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
+
   
 
 // Setup DOM references & listeners after DOM ready
@@ -277,6 +302,8 @@ document.addEventListener("DOMContentLoaded", () => {
   scoreEl = document.getElementById("score");
   messageEl = document.getElementById("message");
   svgRoot = document.getElementById("nigeriaMap") || document.querySelector("svg");
+  restartBtn = document.getElementById("restartBtn");
+  
 
   if (!startBtn || !submitBtn || !skipBtn || !revealBtn) {
     console.warn("Missing one or more game control elements. Check IDs.");
@@ -286,6 +313,8 @@ document.addEventListener("DOMContentLoaded", () => {
   submitBtn.addEventListener("click", submitGuessHandler);
   skipBtn.addEventListener("click", skipHandler);
   revealBtn.addEventListener("click", revealHandler);
+  restartBtn.addEventListener("click", restartGame);
+
 
   // allow Enter in guess input
   if (guessInput) {

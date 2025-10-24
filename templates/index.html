@@ -17,7 +17,7 @@
     }
 
     #controls {
-      margin: 20px;
+      margin: 10px;
     }
 
     button {
@@ -30,6 +30,8 @@
       cursor: pointer;
       font-size: 16px;
     }
+
+
 
     button:hover {
       background-color: #0056b3;
@@ -85,7 +87,7 @@
 </head>
 <body>
   <h1>Nigeria Map Guess Game</h1>
-  <p>We color a state (green). Guess which state was colored. Finish all states or beat the 7-minute timer!</p>
+  <p>We color a state (green). Guess which state was colored. Finish all states. Good luck</p>
 
   <div id="rules-container" style="margin-bottom: 15px;">
     <button id="toggle-rules" 
@@ -105,6 +107,7 @@
         <li>You can only use <b>Skip</b> and <b>Reveal</b> <b>2 times each</b>.</li>
         <li>If time runs out, the correct answer will be revealed.</li>
         <li>The game ends when all <b>36 states</b> are completed.</li>
+        <li>To <b>Play Again,</b> Tap the <b>Start Game </b>button.</li>
       </ul>
       <p><b>Scoring:</b> 🏆 1 point per correct answer. Aim for a perfect score!</p>
       <p style="color: #0077cc;">Press <b>Start Game</b> to begin! 🎮</p>
@@ -117,7 +120,9 @@
     <button id="start-btn">Start Game</button>
     <button id="skip-btn">Skip</button>
     <button id="reveal-btn">Reveal</button>
+    
   </div>
+
 
   <div id="guess-section">
     <input type="text" id="guess-input" placeholder="Type your guess here">
