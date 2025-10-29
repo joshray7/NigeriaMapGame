@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ state_name }} — Nigeria Map Game</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f2f6fa;
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #1e90ff;
+      color: white;
+      text-align: center;
+      padding: 1.5rem 0;
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .intro {
+      font-size: 1.15rem;
+      color: #444;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .info p {
+      font-size: 1.1rem;
+      margin: 0.6rem 0;
+      line-height: 1.5;
+    }
+
+    .rare-fact {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #fff7cc;
+      border-left: 5px solid #ffcc00;
+      border-radius: 6px;
+      font-style: italic;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-top: 1.8rem;
+      padding: 0.8rem 1.3rem;
+      background: #1e90ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #0f6cd8;
+    }
+  </style>
+</head>
+<body>
+
+  <header>{{ state_name }}</header>
+
+  <div class="container">
+    {% set states = {
+        "Abia": {
+            "description": "Known for its entrepreneurial spirit, especially in Aba, a major commercial hub.",
+            "capital": "Umuahia",
+            "slogan": "God’s Own State",
+            "minerals": "Oil, limestone, lead, zinc",
+            "population": "Approx. 3.7 million",
+            "landmass": "6,320 km²",
+            "fact": "Aba, in Abia, is famous for locally made goods and innovative craftsmanship."
+          },
+          "Adamawa": {
+            "description": "Located in northeastern Nigeria, known for its mountains, rivers, and cultural diversity.",
+            "capital": "Yola",
+            "slogan": "Land of Beauty",
+            "minerals": "Limestone, gypsum, clay",
+            "population": "Approx. 5 million",
+            "landmass": "36,917 km²",
+            "fact": "Adamawa shares a long border with Cameroon and is known for its scenic highlands."
+          },
+          "Akwa Ibom": {
+            "description": "Rich in oil and culture, known for hospitality and beautiful coastline.",
+            "capital": "Uyo",
+            "slogan": "Land of Promise",
+            "minerals": "Crude oil, natural gas, salt",
+            "population": "Approx. 5.4 million",
+            "landmass": "7,081 km²",
+            "fact": "Akwa Ibom is one of Nigeria’s cleanest and most peaceful states."
+          },
+          "Anambra": {
+            "description": "The commercial heart of the southeast, known for trade and industry.",
+            "capital": "Awka",
+            "slogan": "Light of the Nation",
+            "minerals": "Natural gas, bauxite, crude oil",
+            "population": "Approx. 6 million",
+            "landmass": "4,844 km²",
+            "fact": "Anambra is Nigeria’s most densely populated state."
+          },
+          "Bauchi": {
+            "description": "Home to Yankari National Park, Nigeria’s top wildlife reserve.",
+            "capital": "Bauchi",
+            "slogan": "Pearl of Tourism",
+            "minerals": "Tin, coal, gypsum",
+            "population": "Approx. 7 million",
+            "landmass": "49,119 km²",
+            "fact": "The name ‘Bauchi’ comes from a hunter named Baushe, a hero of local legend."
+          },
+          "Bayelsa": {
+            "description": "A coastal state rich in oil and home to the Niger Delta.",
+            "capital": "Yenagoa",
+            "slogan": "Glory of All Lands",
+            "minerals": "Crude oil, natural gas",
+            "population": "Approx. 2.3 million",
+            "landmass": "10,773 km²",
+            "fact": "Bayelsa is one of the youngest states in Nigeria, created in 1996."
+          },
+          "Benue": {
+            "description": "Known as the ‘Food Basket of the Nation’ due to vast farmlands.",
+            "capital": "Makurdi",
+            "slogan": "Food Basket of the Nation",
+            "minerals": "Limestone, clay, coal",
+            "population": "Approx. 5.6 million",
+            "landmass": "34,059 km²",
+            "fact": "Benue is a major producer of yam, cassava, and oranges."
+          },
+          "Borno": {
+            "description": "Famous for the ancient Kanem-Bornu Empire and Lake Chad.",
+            "capital": "Maiduguri",
+            "slogan": "Home of Peace",
+            "minerals": "Clay, gypsum, potash",
+            "population": "Approx. 6 million",
+            "landmass": "70,898 km²",
+            "fact": "Borno is the largest state in northeastern Nigeria."
+          },
+          "Cross River": {
+            "description": "Tourist haven with Obudu Mountain Resort and Calabar Carnival.",
+            "capital": "Calabar",
+            "slogan": "The People’s Paradise",
+            "minerals": "Limestone, barite, salt",
+            "population": "Approx. 3.7 million",
+            "landmass": "20,156 km²",
+            "fact": "Calabar Carnival is Africa’s biggest street party."
+          },
+          "Delta": {
+            "description": "An oil-producing state with a rich cultural mix.",
+            "capital": "Asaba",
+            "slogan": "The Big Heart",
+            "minerals": "Crude oil, gas, limestone",
+            "population": "Approx. 5.5 million",
+            "landmass": "17,698 km²",
+            "fact": "Delta is home to the famous Niger River Delta region."
+          },
+          "Ebonyi": {
+            "description": "Known for its salt lakes and growing infrastructure.",
+            "capital": "Abakaliki",
+            "slogan": "Salt of the Nation",
+            "minerals": "Lead, zinc, limestone",
+            "population": "Approx. 3 million",
+            "landmass": "5,670 km²",
+            "fact": "Ebonyi produces most of Nigeria’s salt."
+          },
+          "Edo": {
+            "description": "Home of the ancient Benin Kingdom and great artworks.",
+            "capital": "Benin City",
+            "slogan": "Heartbeat of the Nation",
+            "minerals": "Limestone, clay, marble",
+            "population": "Approx. 4.2 million",
+            "landmass": "17,802 km²",
+            "fact": "The Benin Bronzes are among the world’s most famous artworks."
+          },
+          "Ekiti": {
+            "description": "Renowned for hills and academic excellence.",
+            "capital": "Ado-Ekiti",
+            "slogan": "Fountain of Knowledge",
+            "minerals": "Granite, kaolin, clay",
+            "population": "Approx. 3.3 million",
+            "landmass": "6,353 km²",
+            "fact": "Ekiti has one of the highest numbers of professors per capita in Nigeria."
+          },
+          "Enugu": {
+            "description": "‘Coal City’ known for its historic coal mining.",
+            "capital": "Enugu",
+            "slogan": "Coal City State",
+            "minerals": "Coal, limestone, iron ore",
+            "population": "Approx. 4.4 million",
+            "landmass": "7,618 km²",
+            "fact": "Enugu was one of the first cities in Nigeria to have electricity."
+          },
+          "Gombe": {
+            "description": "A peaceful state with rich culture in the northeast.",
+            "capital": "Gombe",
+            "slogan": "Jewel in the Savannah",
+            "minerals": "Gypsum, kaolin, coal",
+            "population": "Approx. 3.5 million",
+            "landmass": "20,265 km²",
+            "fact": "Gombe sits at the center of Nigeria’s northeastern states."
+          },
+          "Imo": {
+            "description": "Known for hospitality, oil, and commerce.",
+            "capital": "Owerri",
+            "slogan": "Eastern Heartland",
+            "minerals": "Crude oil, natural gas",
+            "population": "Approx. 4.8 million",
+            "landmass": "5,530 km²",
+            "fact": "Owerri is one of the most entertaining cities in southeastern Nigeria."
+          },
+          "Kano": {
+            "description": "Historic trading city rich in culture and commerce.",
+            "capital": "Kano",
+            "slogan": "Centre of Commerce",
+            "minerals": "Tin, kaolin, limestone",
+            "population": "Approx. 15 million",
+            "landmass": "20,131 km²",
+            "fact": "Kano is one of Africa’s oldest continuously inhabited cities."
+          },
+          "Kaduna": {
+            "description": "Diverse northern state known for education and agriculture.",
+            "capital": "Kaduna",
+            "slogan": "Centre of Learning",
+            "minerals": "Gold, clay, nickel",
+            "population": "Approx. 9 million",
+            "landmass": "46,053 km²",
+            "fact": "Home to Nigeria’s Defence Academy and Ahmadu Bello University."
+          },
+          "Kogi": {
+            "description": "Confluence State — where Rivers Niger and Benue meet.",
+            "capital": "Lokoja",
+            "slogan": "Confluence State",
+            "minerals": "Iron ore, limestone, coal",
+            "population": "Approx. 4.5 million",
+            "landmass": "29,833 km²",
+            "fact": "Lokoja was once Nigeria’s first administrative capital."
+          },
+          "Lagos": {
+            "description": "Nigeria’s economic powerhouse, famous for beaches and nightlife.",
+            "capital": "Ikeja",
+            "slogan": "Centre of Excellence",
+            "minerals": "Glass sand, clay, bitumen",
+            "population": "Approx. 20 million",
+            "landmass": "3,577 km²",
+            "fact": "Lagos is Nigeria’s smallest state by landmass but largest by population."
+          },
+          "FCT": {
+            "description": "Nigeria’s planned capital city, located at the country’s center.",
+            "capital": "Abuja",
+            "slogan": "Centre of Unity",
+            "minerals": "Marble, tin, clay",
+            "population": "Approx. 3 million",
+            "landmass": "7,315 km²",
+            "fact": "Abuja was built in the 1980s to replace Lagos as the capital."
+          },
+
+          "Kebbi": {
+            "description": "An agricultural state famous for rice and fishing festivals.",
+            "capital": "Birnin Kebbi",
+            "slogan": "Land of Equity",
+            "minerals": "Gold, gypsum, kaolin",
+            "population": "Approx. 4.4 million",
+            "landmass": "36,229 km²",
+            "fact": "Kebbi hosts the annual Argungu Fishing Festival, one of Nigeria’s biggest cultural events."
+          },
+          "Kwara": {
+            "description": "A peaceful state that bridges northern and southern Nigeria.",
+            "capital": "Ilorin",
+            "slogan": "State of Harmony",
+            "minerals": "Limestone, marble, clay",
+            "population": "Approx. 3.6 million",
+            "landmass": "36,825 km²",
+            "fact": "Ilorin was founded by Yoruba warriors but has strong Hausa influence."
+          },
+          "Nasarawa": {
+            "description": "A mineral-rich state in central Nigeria.",
+            "capital": "Lafia",
+            "slogan": "Home of Solid Minerals",
+            "minerals": "Tin, columbite, coal",
+            "population": "Approx. 2.5 million",
+            "landmass": "27,117 km²",
+            "fact": "Nasarawa has some of Nigeria’s most diverse mineral deposits."
+          },
+          "Niger": {
+            "description": "The largest state in Nigeria by land area.",
+            "capital": "Minna",
+            "slogan": "The Power State",
+            "minerals": "Gold, copper, iron ore",
+            "population": "Approx. 6 million",
+            "landmass": "76,363 km²",
+            "fact": "Niger State hosts Nigeria’s largest hydroelectric dam — Kainji Dam."
+          },
+          "Ogun": {
+            "description": "Industrial hub in southwestern Nigeria.",
+            "capital": "Abeokuta",
+            "slogan": "Gateway State",
+            "minerals": "Limestone, clay, phosphate",
+            "population": "Approx. 5.2 million",
+            "landmass": "16,762 km²",
+            "fact": "Abeokuta means 'under the rock' — referring to the famous Olumo Rock."
+          },
+          "Ondo": {
+            "description": "Rich in cocoa and forest resources.",
+            "capital": "Akure",
+            "slogan": "Sunshine State",
+            "minerals": "Bitumen, granite, kaolin",
+            "population": "Approx. 4.5 million",
+            "landmass": "15,500 km²",
+            "fact": "Ondo is Nigeria’s leading cocoa-producing state."
+          },
+          "Osun": {
+            "description": "Culturally rich Yoruba state, home of Osun-Osogbo Festival.",
+            "capital": "Osogbo",
+            "slogan": "State of the Living Spring",
+            "minerals": "Gold, talc, clay",
+            "population": "Approx. 4 million",
+            "landmass": "9,026 km²",
+            "fact": "Osun River and its sacred grove are UNESCO World Heritage sites."
+          },
+          "Plateau": {
+            "description": "Known for its cool climate and beautiful hills.",
+            "capital": "Jos",
+            "slogan": "Home of Peace and Tourism",
+            "minerals": "Tin, columbite, zinc",
+            "population": "Approx. 4.2 million",
+            "landmass": "30,913 km²",
+            "fact": "Jos Plateau stands 1,200 meters above sea level."
+          },
+          "Sokoto": {
+            "description": "Historical center of Islamic learning in Nigeria.",
+            "capital": "Sokoto",
+            "slogan": "Seat of the Caliphate",
+            "minerals": "Kaolin, gypsum, limestone",
+            "population": "Approx. 5 million",
+            "landmass": "25,973 km²",
+            "fact": "Sokoto Caliphate was one of the largest empires in 19th-century Africa."
+          },
+          "Taraba": {
+            "description": "A mountainous state known for Mambilla Plateau and tea plantations.",
+            "capital": "Jalingo",
+            "slogan": "Nature’s Gift to the Nation",
+            "minerals": "Barite, marble, lead",
+            "population": "Approx. 3 million",
+            "landmass": "54,473 km²",
+            "fact": "The Mambilla Plateau is Nigeria’s highest point and hosts tea farms."
+          },
+          "Yobe": {
+            "description": "An agricultural state located in the Sahel region.",
+            "capital": "Damaturu",
+            "slogan": "Pride of the Sahel",
+            "minerals": "Gypsum, limestone, salt",
+            "population": "Approx. 3 million",
+            "landmass": "45,502 km²",
+            "fact": "Yobe shares a long border with Niger Republic."
+          },
+          "Zamfara": {
+            "description": "Rich in gold and agricultural resources.",
+            "capital": "Gusau",
+            "slogan": "Farming is Our Pride",
+            "minerals": "Gold, lead, zinc",
+            "population": "Approx. 3.9 million",
+            "landmass": "39,762 km²",
+            "fact": "Zamfara was the first state in Nigeria to implement Sharia law in 1999."
+          }    
+    } %}
+
+    {% if state_name in states %}
+      <div class="intro">{{ states[state_name]["description"] }}</div>
+      <div class="info">
+        <p><strong>Capital:</strong> {{ states[state_name]["capital"] }}</p>
+        <p><strong>Slogan:</strong> {{ states[state_name]["slogan"] }}</p>
+        <p><strong>Major Mineral Resources:</strong> {{ states[state_name]["minerals"] }}</p>
+        <p><strong>Population:</strong> {{ states[state_name]["population"] }}</p>
+        <p><strong>Land Mass:</strong> {{ states[state_name]["landmass"] }}</p>
+
+        <div class="rare-fact">
+          🌍 <strong>Rare Fact:</strong> {{ states[state_name]["fact"] }}
+        </div>
+      </div>
+    {% else %}
+      <p>❌ Sorry, no information available for this state yet.</p>
+    {% endif %}
+
+    <a href="/" class="back-btn">⬅ Back to Game</a>
+  </div>
+</body>
+</html>

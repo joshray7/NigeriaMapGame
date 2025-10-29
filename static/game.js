@@ -1,10 +1,53 @@
 // game.js - per-state 60s timer + immediate next-state behavior
+let guessedStates = JSON.parse(localStorage.getItem("guessedStates")) || [];
+
+
 
 // CONFIG
 const PER_STATE_SECONDS = 60;   // 60 seconds per guess
 const ATTEMPTS_PER_STATE = 3;   // how many tries per state before it's failed
 const MAX_REVEAL_USES = 2;
 const MAX_SKIP_USES = 2;
+const stateDescriptions = {
+  Abia: "Known as God’s Own State, Abia is famous for its commercial hub Aba, renowned for leather works and craftsmanship.",
+  Adamawa: "Located in northeastern Nigeria, Adamawa is home to the Sukur Cultural Landscape, a UNESCO World Heritage Site.",
+  AkwaIbom: "Rich in oil and culture, Akwa Ibom is known for its cuisine and the beautiful city of Uyo.",
+  Anambra: "Known as the Light of the Nation, Anambra is famous for Onitsha Market and historical sites like Ogbunike Caves.",
+  Bauchi: "Home to Yankari National Park, Bauchi is a top tourist destination known for wildlife and warm springs.",
+  Bayelsa: "Located in the Niger Delta, Bayelsa is rich in crude oil and known for being the home state of former President Goodluck Jonathan.",
+  Benue: "Known as the Food Basket of the Nation, Benue produces large quantities of yams, oranges, and grains.",
+  Borno: "The Home of Peace, Borno is Nigeria’s largest state by area and home to the historic Kanem-Bornu Empire.",
+  CrossRiver: "Known for its tropical forests, Obudu Mountain Resort, and the Calabar Carnival — Africa’s biggest street party.",
+  Delta: "A rich oil-producing state in the Niger Delta, Delta is known for its diverse ethnic groups and natural resources.",
+  Ebonyi: "Nicknamed the Salt of the Nation, Ebonyi is famous for its large salt lakes and rice production.",
+  Edo: "Home of the ancient Benin Kingdom, Edo is known for its bronze art, culture, and heritage.",
+  Ekiti: "Known as the Fountain of Knowledge, Ekiti State has a high literacy rate and beautiful rolling hills.",
+  Enugu: "The Coal City State, Enugu was a major coal mining center and is now a hub of culture and education.",
+  Gombe: "The Jewel in the Savannah, Gombe is known for its natural beauty and friendly people.",
+  Imo: "Nicknamed the Eastern Heartland, Imo is known for Owerri city, hospitality, and cultural festivals.",
+  Jigawa: "Located in the northwest, Jigawa is known for agriculture and traditional Hausa culture.",
+  Kaduna: "Known as the Center of Learning, Kaduna hosts many educational institutions and a rich cultural heritage.",
+  Kano: "One of the oldest cities in West Africa, Kano is a major trade and industrial hub with deep Islamic history.",
+  Katsina: "Home to the historic Gobarau Minaret and the Emir’s Palace, Katsina is rich in northern tradition.",
+  Kebbi: "Known for Argungu Fishing Festival, Kebbi is an agricultural hub and cultural center of the northwest.",
+  Kogi: "Nicknamed the Confluence State, Kogi is where the River Niger and River Benue meet.",
+  Kwara: "Known as the State of Harmony, Kwara blends Yoruba and northern cultures beautifully.",
+  Lagos: "Nigeria’s economic powerhouse, Lagos is famous for its beaches, nightlife, and status as Africa’s largest city.",
+  Nasarawa: "Known as the Home of Solid Minerals, Nasarawa is rich in natural resources and scenic beauty.",
+  Niger: "Nigeria’s largest state by landmass, Niger hosts Kainji Dam and the Gurara Waterfalls.",
+  Ogun: "The Gateway State, Ogun is home to industries, Olumo Rock, and Nigeria’s first university (UI in Ibadan was built near Ogun).",
+  Ondo: "Known as the Sunshine State, Ondo is rich in cocoa and blessed with scenic landscapes.",
+  Osun: "Home to the Osun-Osogbo Sacred Grove, a UNESCO World Heritage Site, and rich Yoruba traditions.",
+  Oyo: "Known as the Pacesetter State, Oyo was the seat of the ancient Oyo Empire and home to Ibadan, one of Nigeria’s largest cities.",
+  Plateau: "Nicknamed the Home of Peace and Tourism, Plateau has a cool climate and beautiful rock formations.",
+  Rivers: "Known for oil wealth and the Port Harcourt city, Rivers is a key industrial and cultural center.",
+  Sokoto: "The Seat of the Caliphate, Sokoto is an Islamic cultural center with deep historical significance.",
+  Taraba: "Nicknamed Nature’s Gift to the Nation, Taraba is home to Mambilla Plateau and diverse ethnic groups.",
+  Yobe: "Located in the northeast, Yobe is known for livestock farming and ancient Kanuri traditions.",
+  Zamfara: "Known for its gold deposits and agriculture, Zamfara is rich in culture and history.",
+  FCT: "Abuja, the Federal Capital Territory, is Nigeria’s capital city — planned, modern, and home to Aso Rock and the National Mosque."
+};
+
 
 // STATE
 let allStates = [];
@@ -69,6 +112,29 @@ function stopPerStateTimer() {
 function resetAllStateColors() {
   allStates.forEach(p => p.style.fill = "#ccc");
 }
+
+const moreInfoBtn = document.getElementById("more-info-btn");
+
+
+function showDescription(stateName) {
+  const descriptionDiv = document.getElementById("description");
+  const desc = stateDescriptions[stateName] || "No description available.";
+  descriptionDiv.innerHTML = `<strong>${stateName}:</strong> ${desc}`;
+
+  moreInfoBtn.style.display = "inline-block";
+  moreInfoBtn.onclick = () => {
+    pauseGame();
+    window.location.href = `/state/${stateName}`;
+  };
+
+}
+
+function pauseGame() {
+  gameRunning = false;
+  stopPerStateTimer();
+}
+
+
 
 // Show state name on map (centered in bbox)
 function showStateNameOnMap(el, color = "black") {
@@ -157,17 +223,27 @@ function submitGuessHandler() {
     // correct
     stopPerStateTimer();
     correctCount++;
+    const stateName = getStateNameFromElement(currentState);
+
+    // ✅ Only push if not already stored
+    if (!guessedStates.includes(stateName)) {
+      guessedStates.push(stateName);
+      localStorage.setItem("guessedStates", JSON.stringify(guessedStates));
+    }
     currentState.dataset.guessed = "true";
     currentState.style.fill = "#2ecc71"; // lighter green to indicate success
     showStateNameOnMap(currentState, "black");
     updateScoreDisplay();
     messageEl.textContent = `✅ Correct! It was ${getStateNameFromElement(currentState)}. Next state coming...`;
+    showDescription(getStateNameFromElement(currentState));
+    guessedStates.push(getStateNameFromElement(currentState));
     guessInput.value = "";
 
     // short pause then next state
     setTimeout(() => {
       pickRandomState();
     }, 900);
+    
 
   } else {
     // wrong
@@ -199,10 +275,9 @@ function skipHandler() {
   skipUses++;
 
   stopPerStateTimer();
-  messageEl.textContent = `⏭️ Skipped ${getStateNameFromElement(currentState)}.`;
-  currentState.dataset.guessed = "true";
+  messageEl.textContent = `⏭️ You've Skipped a state.`;
   currentState.style.fill = "#95a5a6"; // grey for skipped
-  showStateNameOnMap(currentState, "black");
+  remainingStates.push(currentState);
   setTimeout(() => {
     pickRandomState();
   }, 700);
@@ -220,6 +295,8 @@ function revealHandler() {
   currentState.dataset.guessed = "true";
   currentState.style.fill = "#f39c12"; // orange
   showStateNameOnMap(currentState, "black");
+  showDescription(getStateNameFromElement(currentState));
+
   setTimeout(() => {
     pickRandomState();
   }, 900);
@@ -227,45 +304,53 @@ function revealHandler() {
 
 function startGameHandler() {
 
-    document.getElementById("game-rules").style.display = "none"; // hide rules
-  // initialize lists
-  svgRoot = document.getElementById("nigeria-map") || document.querySelector("svg");
-  if (!svgRoot) {
-    alert("SVG map not found (id 'nigeria-map'). Make sure your SVG is inline and has that id.");
-    return;
-  }
-
-  stopPerStateTimer(); // stop any running timer
-
-  correctCount = 0;
-  skipUses = 0;
-  revealUses = 0;
-  currentState = null;
-  gameRunning = true;
-
-  // Remove all text labels (state names)
-  svgRoot.querySelectorAll("text").forEach(t => t.remove());
-
-  // Reset all state colors and guessed flags
-  allStates = Array.from(svgRoot.querySelectorAll("path"));
-  allStates.forEach(p => {
-    p.style.fill = "#ccc";
-    p.dataset.guessed = "";
-  });
-
-  // fetch all state paths (only direct path elements inside svg)
-  allStates = Array.from(svgRoot.querySelectorAll("path"));
-  // reset guessed flags
-  allStates.forEach(p => { p.dataset.guessed = ""; p.style.fill = "#ccc"; });
-
-  remainingStates = [...allStates];
-  correctCount = 0;
-  updateScoreDisplay();
-  gameRunning = true;
-  messageEl.textContent = "Game started! Good luck.";
-  pickRandomState();
+  document.getElementById("game-rules").style.display = "none"; // hide rules
+// initialize lists
+svgRoot = document.getElementById("nigeria-map") || document.querySelector("svg");
+if (!svgRoot) {
+  alert("SVG map not found (id 'nigeria-map'). Make sure your SVG is inline and has that id.");
+  return;
 }
 
+stopPerStateTimer(); // stop any running timer
+let savedGuessedStates = JSON.parse(localStorage.getItem("guessedStates")) || [];
+
+correctCount = savedGuessedStates.length;
+skipUses = 0;
+revealUses = 0;
+currentState = null;
+gameRunning = true;
+
+// Remove all text labels (state names)
+svgRoot.querySelectorAll("text").forEach(t => t.remove());
+
+// Reset all state colors and guessed flags
+allStates.forEach(p => {
+  const stateName = getStateNameFromElement(p);
+  if (guessedStates.includes(stateName)) {
+    // ✅ Already guessed — keep green
+    p.style.fill = "#2ecc71";
+    p.dataset.guessed = "true";
+    showStateNameOnMap(p, "black");
+  } else {
+    p.style.fill = "#ccc";
+    p.dataset.guessed = "";
+  }
+});
+
+
+// fetch all state paths (only direct path elements inside svg)
+allStates = Array.from(svgRoot.querySelectorAll("path"));
+// reset guessed flags
+allStates.forEach(p => { p.dataset.guessed = ""; p.style.fill = "#ccc"; });
+
+remainingStates = [...allStates];
+correctCount = 0;
+updateScoreDisplay();
+gameRunning = true;
+messageEl.textContent = "Game started! Good luck.";
+pickRandomState();
+}
 
 
 
@@ -313,7 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
   submitBtn.addEventListener("click", submitGuessHandler);
   skipBtn.addEventListener("click", skipHandler);
   revealBtn.addEventListener("click", revealHandler);
-  restartBtn.addEventListener("click", restartGame);
 
 
   // allow Enter in guess input

@@ -5,5 +5,9 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
+@app.route('/state/<state_name>')
+def state_page(state_name):
+    return render_template('state.html', state_name=state_name.title())
+
 if __name__ == '__main__':
     app.run(debug=True)
