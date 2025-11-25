@@ -1,22 +1,36 @@
-from flask import Flask, render_template, request, redirect,  session
+from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
+import os
 
 app = Flask(__name__)
-app.secret_key = "d0bbf985f0efc162da04980e2746a4e9f2bc1c6818ccde32c4e3fc9a54849eec"
+app.secret_key = os.getenv("SECRET_KEY", "d0bbf985f0efc162da04980e2746a4e9f2bc1c6818ccde32c4e3fc9a54849eec")
+
 
 # ==========================
-#   MYSQL DATABASE SETUP
+#   DATABASE CONFIGURATION
 # ==========================
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:Joshray777.()@localhost/nigeria_game"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Use Render DATABASE_URL if available
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# If running locally → use your local PostgreSQL or fallback to SQLite
+if not DATABASE_URL:
+    print("⚠ Using LOCAL database instead of Render DATABASE_URL")
+    DATABASE_URL = "sqlite:///local.db"
+
+# Apply configuration BEFORE initializing SQLAlchemy
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize database
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
+
 # ==========================
-#   DATABASE MODELS
+#        MODELS
 # ==========================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,15 +45,17 @@ class User(db.Model):
 class Progress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    guessed_states = db.Column(db.Text)  # JSON array
+    guessed_states = db.Column(db.Text)  # JSON
     high_score = db.Column(db.Integer, default=0)
 
-# Create tables
+
+# Create tables automatically
 with app.app_context():
     db.create_all()
 
+
 # ==========================
-#          ROUTES
+#         ROUTES
 # ==========================
 
 @app.route("/")
@@ -47,18 +63,14 @@ def index():
     return redirect("/signup")
 
 
-# ------- SIGNUP -------
+# ---------- SIGNUP ----------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         username = request.form["username"]
-        if username is None:
-        # Handle missing username
-            return "Username is required", 400
         email = request.form["email"]
         password = request.form["password"]
 
-        # Check if user exists
         existing = User.query.filter(
             (User.username == username) | (User.email == email)
         ).first()
@@ -66,13 +78,12 @@ def signup():
         if existing:
             return render_template("signup.html", error="User already exists.")
 
-        hashed = bcrypt.generate_password_hash(password).decode('utf-8')
+        hashed = bcrypt.generate_password_hash(password).decode("utf-8")
 
         user = User(username=username, email=email, password_hash=hashed)
         db.session.add(user)
         db.session.commit()
 
-        # Automatically create progress entry
         p = Progress(user_id=user.id, guessed_states="[]")
         db.session.add(p)
         db.session.commit()
@@ -82,7 +93,7 @@ def signup():
     return render_template("signup.html")
 
 
-# ------- LOGIN -------
+# -------- LOGIN --------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -94,7 +105,6 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and user.verify_password(password):
-            # Save user in session
             session["user_id"] = user.id
             session["username"] = user.username
             return redirect("/game")
@@ -104,15 +114,13 @@ def login():
     return render_template("login.html", error=error)
 
 
-# ------------ GAME PAGE -------------
+# ---------- GAME ----------
 @app.route("/game")
 def game():
     if "user_id" not in session:
         return redirect("/login")
 
     user_id = session["user_id"]
-
-    # Load their progress
     progress = Progress.query.filter_by(user_id=user_id).first()
 
     guessed_states = json.loads(progress.guessed_states)
@@ -120,26 +128,23 @@ def game():
     return render_template("index.html", guessed_states=guessed_states)
 
 
-# -------- SAVE PROGRESS (AJAX) --------
+# ---------- SAVE PROGRESS ----------
 @app.route("/save_progress", methods=["POST"])
 def save_progress():
     if "user_id" not in session:
         return "Not logged in", 403
 
-    user_id = session["user_id"]
-
     data = request.get_json()
     guessed_states = data["guessed_states"]
 
-    progress = Progress.query.filter_by(user_id=user_id).first()
+    progress = Progress.query.filter_by(user_id=session["user_id"]).first()
     progress.guessed_states = json.dumps(guessed_states)
-
     db.session.commit()
 
     return "OK", 200
 
 
-# -------- LOGOUT --------
+# ---------- LOGOUT ----------
 @app.route("/logout")
 def logout():
     session.clear()
