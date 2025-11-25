@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect,  session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
