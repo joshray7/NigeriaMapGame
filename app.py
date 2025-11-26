@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
 import os
+import jsonify
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "d0bbf985f0efc162da04980e2746a4e9f2bc1c6818ccde32c4e3fc9a54849eec")
@@ -58,9 +59,13 @@ with app.app_context():
 #         ROUTES
 # ==========================
 
-@app.route("/")
-def index():
-    return redirect("/signup")
+@app.route('/')
+def home():
+    if 'user_id' in session:
+        return redirect('/game')
+    else:
+        return redirect('/login')
+
 
 
 # ---------- SIGNUP ----------
@@ -123,7 +128,14 @@ def game():
     user_id = session["user_id"]
     progress = Progress.query.filter_by(user_id=user_id).first()
 
+    # If user has no progress entry — create one
+    if progress is None:
+        progress = Progress(user_id=user_id, guessed_states="[]", high_score=0)
+        db.session.add(progress)
+        db.session.commit()
+
     guessed_states = json.loads(progress.guessed_states)
+
 
     return render_template("index.html", guessed_states=guessed_states)
 
@@ -143,6 +155,15 @@ def save_progress():
 
     return "OK", 200
 
+
+@app.route('/reset', methods=['POST'])
+def reset_game():
+    session.pop('guessed_states', None)
+    return jsonify(success=True)
+
+@app.route('/state/<state_name>')
+def show_description(state_name):
+    return render_template('state.html', state_name=state_name.title())
 
 # ---------- LOGOUT ----------
 @app.route("/logout")
