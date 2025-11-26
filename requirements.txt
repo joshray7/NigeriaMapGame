@@ -11,3 +11,4 @@ Flask-Bcrypt
 pymysql
 Flask-Migrate
 psycopg2-binary
+jsonify
