@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Sign Up</title>
+    <style>
+        body{
+            padding: 0;
+            margin: 0;
+            display: flex;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background-color: #20c492;
+            animation: rotate-bg-color 10s infinite;
+        }
+        .signup-container{
+            width: 600px;
+            background: rgb(14, 12, 12);
+            height: 500px;
+            border-radius: 10px;
+            box-shadow: 0 0px 12px rgba(0 ,0 ,0 ,0.15);
+            border: 1px solid black;
+            text-align: center;
+            background-size: cover;
+            background-position: center;
+            color: rgb(149, 150, 151);
+        }
+        .signup-container h2{
+            margin-bottom: 20px;
+            color: #20c492
+        }
+        .input-text{
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .input-text label{
+            display: block;
+            margin-bottom: 7px;
+            font-size: 15px;
+        }
+        .input-text input{
+            width: 65%;
+            padding: 12px;
+            background: green;
+            color: #060707;
+            border: none;
+        }
+        .input-box{
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .input-box input{
+            width: 61%;
+            padding: 12px;
+            background: green;
+            color: #060707;
+            border: none;
+        }
+        .input-box button{
+            height: 40px;
+            width: 45px;
+            border: none;
+        }
+        .input-box label{
+            display: block;
+            margin-bottom: 7px;
+            font-size: 15px;
+        }
+        button{
+            background: green;
+            height: 40px;
+            margin: 10px 0px;
+            box-shadow: 0 0 5px rgba(0 ,0 ,0 ,0.3);
+            border: none;
+            border-radius: 4px;
+            color: black;
+            width: 150px;
+        }
+        button:hover{
+            background: #20c492;
+        }
+        .input-box input:hover{
+            background: #20c492;
+        }
+        
+        .input-text input:hover{
+            background: #20c492;
+        }
+
+        @keyframes rotate-bg-color {
+        0% {
+            background-color: rgb(88, 207, 58);
+        }
+        10% {
+            background-color: rgb(65, 131, 68);
+        }
+        20% {
+            background-color: rgba(93, 185, 70, 0.432);
+        }
+        30% {
+            background-color: rgba(18, 88, 18, 0.788);
+        }
+        40% {
+            background-color: green;
+        }
+        50% {
+            background-color: rgba(157, 194, 154, 0.747);
+        }
+        60% {
+            background-color: rgba(65, 153, 57, 0.87);
+        }
+        70% {
+            background-color: rgb(42, 136, 81);
+        }
+        80% {
+            background-color: rgb(151, 221, 38);
+        }
+        90% {
+            background-color: rgba(31, 136, 17, 0.521);
+        }
+        100% {
+            background-color: black;
+        }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <form action="/signup" method="POST" autocomplete="off">
+            <h2>Sign Up</h2>
+            <div class="input-text">
+                <label>Username</label>
+                <input type="text" name="username" minlength="5" autocomplete="new-username" required>
+            </div>
+            <div class="input-text">
+                <label>E-mail</label>
+                <input type="email" name="email" required>
+            </div>
+            <div class="input-box">
+                <label>Password</label>
+                <input type="password" id="passwordField" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" autocomplete="new-password" required>
+                <span class="password-toggle-icon" id="togglePassword">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
+            <div class="input-text">
+                <label>Phone number</label>
+                <input type="tel" name="phone no" autocomplete="new-phone no" required>
+            </div>
+            <button type="submit">Submit</button>
+            <p class="login-text">Already have an account? <a href="/login">Login</a></p>
+    
+        </form>
+    </div>
+
+    <script>
+        const passwordField = document.getElementById('passwordField');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeIcon = togglePassword.querySelector('i'); // Get the icon element
+  
+        togglePassword.addEventListener('click', function() {
+          if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash'); // Change to closed eye icon
+          } else {
+            passwordField.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye'); // Change back to open eye icon
+          }
+        });
+      </script>
+</body>
+</html>
