@@ -157,8 +157,8 @@ def save_progress():
     if "user_id" not in session:
         return "Not logged in", 403
 
-    data = request.get_json()
-    guessed_states = data["guessed_states"]
+    data = request.get_json() or {}
+    guessed_states = data.get("guessed_states", [])
 
     progress = Progress.query.filter_by(user_id=session["user_id"]).first()
     progress.guessed_states = json.dumps(guessed_states)
