@@ -25,10 +25,6 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-if DATABASE_URL.startswith("postgresql://"):
-    url = urlparse(DATABASE_URL)
-    DATABASE_URL = urlunparse(url._replace(query="sslmode=require"))
-
 
 # Apply configuration BEFORE initializing SQLAlchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
