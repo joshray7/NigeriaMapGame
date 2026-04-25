@@ -81,6 +81,13 @@ def init_db():
     except Exception as e:
         return f"DB Error: {str(e)}"
 
+@app.route("/debug-db")
+def debug_db():
+    try:
+        db.session.execute("SELECT 1")
+        return "DB CONNECTION OK"
+    except Exception as e:
+        return f"DB ERROR: {str(e)}"
 
 # ---------- SIGNUP ----------
 @app.route("/signup", methods=["GET", "POST"])
