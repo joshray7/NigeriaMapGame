@@ -4,3 +4,5 @@ flask-sqlalchemy
 Flask-Bcrypt
 Flask-Migrate
 psycopg2-binary
+jsonify
+python-dotenv
