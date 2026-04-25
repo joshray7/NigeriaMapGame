@@ -73,7 +73,11 @@ def home():
     else:
         return redirect('/login')
 
-
+@app.route("/init-db")
+def init_db():
+    with app.app_context():
+        db.create_all()
+    return "Database initialized!"
 
 # ---------- SIGNUP ----------
 @app.route("/signup", methods=["GET", "POST"])
