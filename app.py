@@ -4,6 +4,8 @@ from flask_bcrypt import Bcrypt
 import json
 import os
 import jsonify
+from urllib.parse import urlparse, urlunparse
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "d0bbf985f0efc162da04980e2746a4e9f2bc1c6818ccde32c4e3fc9a54849eec")
@@ -21,9 +23,21 @@ if not DATABASE_URL:
     print("⚠ Using LOCAL database instead of Render DATABASE_URL")
     DATABASE_URL = "sqlite:///local.db"
 
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if DATABASE_URL.startswith("postgresql://"):
+    url = urlparse(DATABASE_URL)
+    DATABASE_URL = urlunparse(url._replace(query="sslmode=require"))
+
+
 # Apply configuration BEFORE initializing SQLAlchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,
+}
 
 # Initialize database
 db = SQLAlchemy(app)
