@@ -10,29 +10,29 @@ app = Flask(__name__)
 # ==========================
 # SECRET KEY
 # ==========================
-app.secret_key = os.getenv(
-    "SECRET_KEY",
-    "change-this-secret-key"
-)
+app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
 
 # ==========================
-# DATABASE CONFIG
+# DATABASE CONFIG (FIXED)
 # ==========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# fallback to SQLite locally
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///local.db"
 
-# Fix old Render format
-DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# fix old postgres format
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# IMPORTANT: remove query issues + enforce SSL properly
-if "sslmode" not in DATABASE_URL:
+# IMPORTANT: Render / Neon SSL fix
+if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL += "?sslmode=require"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# IMPORTANT: prevents connection crash loops
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
     "pool_recycle": 280
@@ -62,9 +62,17 @@ class Progress(db.Model):
     high_score = db.Column(db.Integer, default=0)
 
 # ==========================
+# SAFE DB INIT (IMPORTANT FIX)
+# ==========================
+with app.app_context():
+    try:
+        db.create_all()
+    except Exception as e:
+        print("DB INIT ERROR:", e)
+
+# ==========================
 # ROUTES
 # ==========================
-
 @app.route("/")
 def home():
     if "user_id" in session:
@@ -72,7 +80,6 @@ def home():
     return redirect("/login")
 
 
-# OPTIONAL: initialize DB manually
 @app.route("/init-db")
 def init_db():
     try:
@@ -82,6 +89,7 @@ def init_db():
     except Exception as e:
         return f"DB Error: {str(e)}"
 
+
 @app.route("/debug-db")
 def debug_db():
     try:
@@ -89,6 +97,7 @@ def debug_db():
         return "DB CONNECTION OK"
     except Exception as e:
         return f"DB ERROR: {str(e)}"
+
 
 # ---------- SIGNUP ----------
 @app.route("/signup", methods=["GET", "POST"])
@@ -159,7 +168,7 @@ def game():
     return render_template("index.html", guessed_states=guessed_states)
 
 
-# ---------- SAVE PROGRESS ----------
+# ---------- SAVE ----------
 @app.route("/save_progress", methods=["POST"])
 def save_progress():
     if "user_id" not in session:
@@ -169,6 +178,7 @@ def save_progress():
     guessed_states = data.get("guessed_states", [])
 
     progress = Progress.query.filter_by(user_id=session["user_id"]).first()
+
     if progress:
         progress.guessed_states = json.dumps(guessed_states)
         db.session.commit()
@@ -182,7 +192,7 @@ def reset_game():
     return jsonify(success=True)
 
 
-# ---------- STATE PAGE ----------
+# ---------- STATE ----------
 @app.route("/state/<state_name>")
 def show_description(state_name):
     return render_template("state.html", state_name=state_name.title())
@@ -196,7 +206,7 @@ def logout():
 
 
 # ==========================
-# RUN APP
+# RUN
 # ==========================
 if __name__ == "__main__":
     app.run()
