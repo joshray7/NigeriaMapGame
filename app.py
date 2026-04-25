@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
 import os
-import jsonify
 from urllib.parse import urlparse, urlunparse
 
 
@@ -62,11 +61,6 @@ class Progress(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     guessed_states = db.Column(db.Text)  # JSON
     high_score = db.Column(db.Integer, default=0)
-
-
-# Create tables automatically
-with app.app_context():
-    db.create_all()
 
 
 # ==========================
