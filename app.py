@@ -3,62 +3,46 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
 import os
-from urllib.parse import urlparse, urlunparse
-
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "d0bbf985f0efc162da04980e2746a4e9f2bc1c6818ccde32c4e3fc9a54849eec")
-
 
 # ==========================
-#   DATABASE CONFIGURATION
+# SECRET KEY
 # ==========================
+app.secret_key = os.getenv(
+    "SECRET_KEY",
+    "change-this-secret-key"
+)
 
-# Use Render DATABASE_URL if available
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# If running locally → use your local PostgreSQL or fallback to SQLite
-if not DATABASE_URL:
-    print("⚠ Using LOCAL database instead of Render DATABASE_URL")
-    DATABASE_URL = "sqlite:///local.db"
-
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
+# ==========================
+# DATABASE CONFIG
+# ==========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
+    print("⚠ Using LOCAL SQLite database")
     DATABASE_URL = "sqlite:///local.db"
 
+# Fix Render PostgreSQL URL format
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Flask config
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# IMPORTANT: prevents Render DB crash
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
-    "connect_args": {
-        "sslmode": "require"
-    }
+    "connect_args": {"sslmode": "require"}  # FIX for Render PostgreSQL
 }
 
-
-# Apply configuration BEFORE initializing SQLAlchemy
-app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,
-}
-
-# Initialize database
+# INIT DB
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
-
 # ==========================
-#        MODELS
+# MODELS
 # ==========================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -72,26 +56,31 @@ class User(db.Model):
 
 class Progress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    guessed_states = db.Column(db.Text)  # JSON
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    guessed_states = db.Column(db.Text, default="[]")
     high_score = db.Column(db.Integer, default=0)
 
 # ==========================
-#         ROUTES
+# ROUTES
 # ==========================
 
-@app.route('/')
+@app.route("/")
 def home():
-    if 'user_id' in session:
-        return redirect('/game')
-    else:
-        return redirect('/login')
+    if "user_id" in session:
+        return redirect("/game")
+    return redirect("/login")
 
+
+# OPTIONAL: initialize DB manually
 @app.route("/init-db")
 def init_db():
-    with app.app_context():
-        db.create_all()
-    return "Database initialized!"
+    try:
+        with app.app_context():
+            db.create_all()
+        return "Database created successfully!"
+    except Exception as e:
+        return f"DB Error: {str(e)}"
+
 
 # ---------- SIGNUP ----------
 @app.route("/signup", methods=["GET", "POST"])
@@ -114,8 +103,8 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
-        p = Progress(user_id=user.id, guessed_states="[]")
-        db.session.add(p)
+        progress = Progress(user_id=user.id, guessed_states="[]")
+        db.session.add(progress)
         db.session.commit()
 
         return redirect("/login")
@@ -123,7 +112,7 @@ def signup():
     return render_template("signup.html")
 
 
-# -------- LOGIN --------
+# ---------- LOGIN ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -144,51 +133,52 @@ def login():
     return render_template("login.html", error=error)
 
 
-# GAME ----------
+# ---------- GAME ----------
 @app.route("/game")
 def game():
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
-    progress = Progress.query.filter_by(user_id=user_id).first()
+    progress = Progress.query.filter_by(user_id=session["user_id"]).first()
 
-    # If user has no progress entry — create one
-    if progress is None:
-        progress = Progress(user_id=user_id, guessed_states="[]", high_score=0)
+    if not progress:
+        progress = Progress(user_id=session["user_id"], guessed_states="[]")
         db.session.add(progress)
         db.session.commit()
 
-    guessed_states = json.loads(progress.guessed_states)
-
+    guessed_states = json.loads(progress.guessed_states or "[]")
 
     return render_template("index.html", guessed_states=guessed_states)
 
 
-# SAVE PROGRESS ----------
+# ---------- SAVE PROGRESS ----------
 @app.route("/save_progress", methods=["POST"])
 def save_progress():
     if "user_id" not in session:
-        return "Not logged in", 403
+        return jsonify({"error": "Not logged in"}), 403
 
     data = request.get_json() or {}
     guessed_states = data.get("guessed_states", [])
 
     progress = Progress.query.filter_by(user_id=session["user_id"]).first()
-    progress.guessed_states = json.dumps(guessed_states)
-    db.session.commit()
+    if progress:
+        progress.guessed_states = json.dumps(guessed_states)
+        db.session.commit()
 
-    return "OK", 200
+    return jsonify({"status": "ok"})
 
 
-@app.route('/reset', methods=['POST'])
+# ---------- RESET ----------
+@app.route("/reset", methods=["POST"])
 def reset_game():
-    session.pop('guessed_states', None)
     return jsonify(success=True)
 
-@app.route('/state/<state_name>')
+
+# ---------- STATE PAGE ----------
+@app.route("/state/<state_name>")
 def show_description(state_name):
-    return render_template('state.html', state_name=state_name.title())
+    return render_template("state.html", state_name=state_name.title())
+
 
 # ---------- LOGOUT ----------
 @app.route("/logout")
@@ -197,7 +187,8 @@ def logout():
     return redirect("/login")
 
 
+# ==========================
+# RUN APP
+# ==========================
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     app.run()
