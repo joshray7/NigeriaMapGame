@@ -17,26 +17,14 @@ app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
 # ==========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# fallback to SQLite locally
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///local.db"
 
-# fix old postgres format
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# IMPORTANT: Render / Neon SSL fix
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL += "?sslmode=require"
-
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# IMPORTANT: prevents connection crash loops
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,
-    "pool_recycle": 280
-}
 
 # INIT DB
 db = SQLAlchemy(app)
