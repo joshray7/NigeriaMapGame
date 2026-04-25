@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
 import os
+from sqlalchemy import text
 
 app = Flask(__name__)
 
@@ -84,7 +85,7 @@ def init_db():
 @app.route("/debug-db")
 def debug_db():
     try:
-        db.session.execute("SELECT 1")
+        db.session.execute(text("SELECT 1"))
         return "DB CONNECTION OK"
     except Exception as e:
         return f"DB ERROR: {str(e)}"
