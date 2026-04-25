@@ -21,21 +21,21 @@ app.secret_key = os.getenv(
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    print("⚠ Using LOCAL SQLite database")
     DATABASE_URL = "sqlite:///local.db"
 
-# Fix Render PostgreSQL URL format
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Fix old Render format
+DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Flask config
+# IMPORTANT: remove query issues + enforce SSL properly
+if "sslmode" not in DATABASE_URL:
+    DATABASE_URL += "?sslmode=require"
+
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# IMPORTANT: prevents Render DB crash
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
-    "connect_args": {"sslmode": "require"}  # FIX for Render PostgreSQL
+    "pool_recycle": 280
 }
 
 # INIT DB
