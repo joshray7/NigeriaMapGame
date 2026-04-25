@@ -62,10 +62,6 @@ class Progress(db.Model):
     guessed_states = db.Column(db.Text)  # JSON
     high_score = db.Column(db.Integer, default=0)
 
-with app.app_context():
-    db.create_all()
-
-
 # ==========================
 #         ROUTES
 # ==========================
@@ -184,4 +180,6 @@ def logout():
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run()
