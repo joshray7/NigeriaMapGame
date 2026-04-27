@@ -2,20 +2,83 @@
 <html>
 <head>
     <title>Profile</title>
+
+    <!-- VERY IMPORTANT FOR MOBILE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .info {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: block;
+            margin-top: 15px;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>👤 Profile</h1>
+<div class="container">
+    <div class="card">
+        <h1>👤 Profile</h1>
 
-<p><strong>Username:</strong> {{ username }}</p>
-<p><strong>Email:</strong> {{ email }}</p>
-<p><strong>High Score:</strong> {{ high_score }}</p>
+        <p class="info"><strong>Username:</strong> <span id="username">{{ username }}</span></p>
+        <p class="info"><strong>Email:</strong> <span id="email">{{ email }}</span></p>
+        <p class="info"><strong>High Score:</strong> <span id="score">{{ high_score }}</span></p>
 
-<br>
+        <a href="/game" class="btn">🎮 Back to Game</a>
+        <a href="/leaderboard" class="btn">🏆 Leaderboard</a>
+        <a href="/logout" class="btn">🚪 Logout</a>
+    </div>
+</div>
 
-<a href="/game">Back to Game</a><br>
-<a href="/leaderboard">Leaderboard</a><br>
-<a href="/logout">Logout</a>
 
 </body>
 </html>
