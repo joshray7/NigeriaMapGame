@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard</title>
+</head>
+<body>
+    <h1>🏆 Top Players</h1>
+
+    <ol>
+        {% for player in players %}
+            <li>{{ player[0] }} - {{ player[1] }}</li>
+        {% endfor %}
+    </ol>
+
+    <a href="/game">Back to Game</a>
+</body>
+</html>

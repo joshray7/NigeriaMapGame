@@ -169,9 +169,44 @@ def save_progress():
 
     if progress:
         progress.guessed_states = json.dumps(guessed_states)
+
+        # 🔥 NEW: update high score automatically
+        score = len(guessed_states)
+        if score > progress.high_score:
+            progress.high_score = score
+
         db.session.commit()
 
     return jsonify({"status": "ok"})
+
+# ---------- LEADERBOARD ----------
+@app.route("/leaderboard")
+def leaderboard():
+    top_users = (
+        db.session.query(User.username, Progress.high_score)
+        .join(Progress, User.id == Progress.user_id)
+        .order_by(Progress.high_score.desc())
+        .limit(10)
+        .all()
+    )
+
+    return render_template("leaderboard.html", top_users=top_users)
+
+# ---------- PROFILE ----------
+@app.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user = User.query.get(session["user_id"])
+    progress = Progress.query.filter_by(user_id=user.id).first()
+
+    return render_template(
+        "profile.html",
+        username=user.username,
+        email=user.email,
+        high_score=progress.high_score if progress else 0
+    )
 
 
 # ---------- RESET ----------

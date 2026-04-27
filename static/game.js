@@ -65,7 +65,7 @@ let skipUses = 0;
 
 
 // ELEMENTS
-let startBtn, skipBtn, revealBtn, submitBtn, restartBtn, guessInput, timerEl, scoreEl, messageEl, svgRoot;
+let profileBtn, startBtn, skipBtn, revealBtn, submitBtn, restartBtn, guessInput, timerEl, scoreEl, messageEl, svgRoot;
 
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase().replace(/\s+/g, "").replace(/state/g, "").replace(/-/g, "");
@@ -380,6 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   startBtn = document.getElementById("start-btn");
   skipBtn = document.getElementById("skip-btn");
+  profileBtn = document.getElementById("profile-btn");
   revealBtn = document.getElementById("reveal-btn");
   submitBtn = document.getElementById("submit-guess");
   guessInput = document.getElementById("guess-input");
@@ -398,7 +399,9 @@ document.addEventListener("DOMContentLoaded", () => {
   submitBtn.addEventListener("click", submitGuessHandler);
   skipBtn.addEventListener("click", skipHandler);
   revealBtn.addEventListener("click", revealHandler);
-
+  profileBtn.addEventListener("click", () => {
+    window.location.href = "/profile";
+  });
 
   // allow Enter in guess input
   if (guessInput) {
