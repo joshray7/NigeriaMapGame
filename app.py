@@ -1,19 +1,32 @@
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from flask_wtf.csrf import CSRFProtect
 import json
 import os
 from sqlalchemy import text
 
 app = Flask(__name__)
+load_dotenv()
+
 
 # ==========================
-# SECRET KEY
+# SECRET KEY (SAFE)
 # ==========================
-app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set!")
+app.config["SECRET_KEY"] = SECRET_KEY
 
 # ==========================
-# DATABASE CONFIG (FIXED)
+# CSRF PROTECTION
+# ==========================
+csrf = CSRFProtect(app)
+app.config["WTF_CSRF_ENABLED"] = True
+
+# ==========================
+# DATABASE CONFIG
 # ==========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -24,9 +37,11 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-
-# INIT DB
+# ==========================
+# INIT EXTENSIONS
+# ==========================
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -49,8 +64,9 @@ class Progress(db.Model):
     guessed_states = db.Column(db.Text, default="[]")
     high_score = db.Column(db.Integer, default=0)
 
+
 # ==========================
-# SAFE DB INIT (IMPORTANT FIX)
+# SAFE DB INIT
 # ==========================
 with app.app_context():
     try:
@@ -66,25 +82,6 @@ def home():
     if "user_id" in session:
         return redirect("/game")
     return redirect("/login")
-
-
-@app.route("/init-db")
-def init_db():
-    try:
-        with app.app_context():
-            db.create_all()
-        return "Database created successfully!"
-    except Exception as e:
-        return f"DB Error: {str(e)}"
-
-
-@app.route("/debug-db")
-def debug_db():
-    try:
-        db.session.execute(text("SELECT 1"))
-        return "DB CONNECTION OK"
-    except Exception as e:
-        return f"DB ERROR: {str(e)}"
 
 
 # ---------- SIGNUP ----------
@@ -121,7 +118,6 @@ def signup():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
-
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -144,16 +140,26 @@ def game():
     if "user_id" not in session:
         return redirect("/login")
 
-    progress = Progress.query.filter_by(user_id=session["user_id"]).first()
+    try:
+        user_id = session["user_id"]
 
-    if not progress:
-        progress = Progress(user_id=session["user_id"], guessed_states="[]")
-        db.session.add(progress)
-        db.session.commit()
+        progress = Progress.query.filter_by(user_id=user_id).first()
 
-    guessed_states = json.loads(progress.guessed_states or "[]")
+        if not progress:
+            progress = Progress(user_id=user_id, guessed_states="[]", high_score=0)
+            db.session.add(progress)
+            db.session.commit()
 
-    return render_template("index.html", guessed_states=guessed_states)
+        try:
+            guessed_states = json.loads(progress.guessed_states or "[]")
+        except (json.JSONDecodeError, TypeError):
+            guessed_states = []
+
+        return render_template("index.html", guessed_states=guessed_states)
+
+    except Exception as e:
+        print("GAME ERROR:", e)
+        return "Something went wrong in /game", 500
 
 
 # ---------- SAVE ----------
@@ -167,17 +173,19 @@ def save_progress():
 
     progress = Progress.query.filter_by(user_id=session["user_id"]).first()
 
-    if progress:
-        progress.guessed_states = json.dumps(guessed_states)
+    if not progress:
+        progress = Progress(user_id=session["user_id"], guessed_states="[]", high_score=0)
+        db.session.add(progress)
 
-        # 🔥 NEW: update high score automatically
-        score = len(guessed_states)
-        if score > progress.high_score:
-            progress.high_score = score
+    # Always update guessed states and high score for all users
+    progress.guessed_states = json.dumps(guessed_states or [])
+    score = len(guessed_states)
+    if score > progress.high_score:
+        progress.high_score = score
 
-        db.session.commit()
-
+    db.session.commit()
     return jsonify({"status": "ok"})
+
 
 # ---------- LEADERBOARD ----------
 @app.route("/leaderboard")
@@ -192,26 +200,45 @@ def leaderboard():
 
     return render_template("leaderboard.html", top_users=top_users)
 
+
 # ---------- PROFILE ----------
 @app.route("/profile")
 def profile():
     if "user_id" not in session:
         return redirect("/login")
 
-    user = User.query.get(session["user_id"])
-    progress = Progress.query.filter_by(user_id=user.id).first()
+    try:
+        user = db.session.get(User, session["user_id"])  # Fixed: no longer deprecated
 
-    return render_template(
-        "profile.html",
-        username=user.username,
-        email=user.email,
-        high_score=progress.high_score if progress else 0
-    )
+        if not user:
+            return redirect("/login")
+
+        progress = Progress.query.filter_by(user_id=user.id).first()
+        high_score = progress.high_score if progress else 0
+
+        return render_template(
+            "profile.html",
+            username=user.username,
+            email=user.email,
+            high_score=high_score
+        )
+
+    except Exception as e:
+        print("PROFILE ERROR:", e)
+        return "Something went wrong", 500
 
 
 # ---------- RESET ----------
 @app.route("/reset", methods=["POST"])
 def reset_game():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 403
+
+    progress = Progress.query.filter_by(user_id=session["user_id"]).first()
+    if progress:
+        progress.guessed_states = "[]"
+        db.session.commit()
+
     return jsonify(success=True)
 
 

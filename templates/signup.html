@@ -132,6 +132,7 @@
 <body>
     <div class="signup-container">
         <form action="/signup" method="POST" autocomplete="off">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <h2>Sign Up</h2>
             <div class="input-text">
                 <label>Username</label>
