@@ -6,3 +6,4 @@ Flask-Migrate
 psycopg2-binary
 jsonify
 python-dotenv
+Flask-WTF
