@@ -232,9 +232,11 @@ function submitGuessHandler() {
 
     // ✅ Only push once — no duplicate
     if (!guessedStates.includes(stateName)) {
-      guessedStates.push(stateName);
-      localStorage.setItem("guessedStates", JSON.stringify(guessedStates));
+        guessedStates.push(stateName);
+        localStorage.setItem("guessedStates", JSON.stringify(guessedStates));
+        saveProgress(guessedStates); // ✅ save to backend immediately
     }
+
 
     currentState.dataset.guessed = "true";
     currentState.style.fill = "#2ecc71";
@@ -341,15 +343,22 @@ function startGameHandler() {
   pickRandomState();
 }
 
-function gameOver(guessedStates) {
+// ✅ Called every correct guess AND at game over
+function saveProgress(states) {
+  console.log("Saving progress to backend:", states);
   fetch("/save_progress", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ guessed_states: guessedStates })
+    body: JSON.stringify({ guessed_states: states })
   })
     .then(res => res.json())
     .then(data => console.log("Progress saved:", data))
     .catch(err => console.error("Save error:", err));
+}
+
+// ✅ Called only at end of game
+function gameOver(guessedStates) {
+  saveProgress(guessedStates);
 }
 
 

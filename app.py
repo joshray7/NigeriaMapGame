@@ -63,7 +63,7 @@ class Progress(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     guessed_states = db.Column(db.Text, default="[]")
     high_score = db.Column(db.Integer, default=0)
-
+    last_score = db.Column(db.Integer, default=0)
 
 # ==========================
 # SAFE DB INIT
@@ -164,28 +164,36 @@ def game():
 
 # ---------- SAVE ----------
 @app.route("/save_progress", methods=["POST"])
+@csrf.exempt  # Exempting CSRF for this API endpoint since it's called via JS fetch
 def save_progress():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 403
 
     data = request.get_json() or {}
     guessed_states = data.get("guessed_states", [])
+    
+    print("SAVE PROGRESS CALLED")           # ✅ add this
+    print("guessed_states:", guessed_states) # ✅ add this
 
     progress = Progress.query.filter_by(user_id=session["user_id"]).first()
 
     if not progress:
-        progress = Progress(user_id=session["user_id"], guessed_states="[]", high_score=0)
+        progress = Progress(user_id=session["user_id"], guessed_states="[]", high_score=0, last_score=0)
         db.session.add(progress)
 
-    # Always update guessed states and high score for all users
     progress.guessed_states = json.dumps(guessed_states or [])
     score = len(guessed_states)
+    
+    print("score:", score)                   # ✅ add this
+    print("current high_score:", progress.high_score) # ✅ add this
+    
     if score > progress.high_score:
         progress.high_score = score
+    progress.last_score = score
 
     db.session.commit()
+    print("DB committed successfully")       # ✅ add this
     return jsonify({"status": "ok"})
-
 
 # ---------- LEADERBOARD ----------
 @app.route("/leaderboard")
@@ -220,7 +228,8 @@ def profile():
             "profile.html",
             username=user.username,
             email=user.email,
-            high_score=high_score
+            high_score=high_score,
+            last_score= progress.last_score if progress else 0
         )
 
     except Exception as e:
@@ -254,6 +263,15 @@ def logout():
     session.clear()
     return redirect("/login")
 
+@app.route("/migrate")
+def migrate():
+    try:
+        db.session.execute(text("ALTER TABLE progress ADD COLUMN last_score INTEGER DEFAULT 0"))
+        db.session.commit()
+        return "Migration successful!"
+    except Exception as e:
+        return f"Migration failed: {str(e)}"
+    
 
 # ==========================
 # RUN
