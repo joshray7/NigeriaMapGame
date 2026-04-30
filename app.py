@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate
 import json
 import os
 from sqlalchemy import text
@@ -44,7 +45,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # ==========================
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-
+migrate = Migrate(app, db)
 # ==========================
 # MODELS
 # ==========================
@@ -100,7 +101,6 @@ def signup():
             return render_template("signup.html", error="User already exists.")
 
         hashed = bcrypt.generate_password_hash(password).decode("utf-8")
-
         user = User(username=username, email=email, password_hash=hashed)
         db.session.add(user)
         db.session.commit()
@@ -263,15 +263,6 @@ def logout():
     session.clear()
     return redirect("/login")
 
-@app.route("/migrate")
-def migrate():
-    try:
-        db.session.execute(text("ALTER TABLE progress ADD COLUMN last_score INTEGER DEFAULT 0"))
-        db.session.commit()
-        return "Migration successful!"
-    except Exception as e:
-        return f"Migration failed: {str(e)}"
-    
 
 # ==========================
 # RUN
