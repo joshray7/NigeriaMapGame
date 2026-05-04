@@ -10,13 +10,13 @@
             margin: 0;
             display: flex; 
             font-family: Arial, sans-serif;
-            height: 100vh;
+            min-height: 100vh;
             align-items: center;
             justify-content: center;
             background-image: url("https://media.istockphoto.com/id/538144876/video/4k-nigeria-flag-loopable.jpg?s=640x640&k=20&c=NnAIAOdDixRpg1XBdDFyGlv9cCNN0glqlVv7Co1dM5I=");
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
+            background-attachment: scroll;
         }
         .login-container{
             width: 400px;
@@ -71,23 +71,6 @@
         }
         .login-container {
             animation: windFlow 3s ease-in-out infinite;
-        }
-        @media only screen and (max-width: 768px) {
-            body {
-                /* 'background-size: cover' ensures the image fills the screen 
-                without stretching, though the very edges might be cropped. */
-                background-size: cover;
-
-                /* This keeps the center of the Nigeria map visible on narrow screens */
-                background-position: center center;
-
-                /* Mobile browsers often struggle with 'fixed' backgrounds; 
-                'scroll' usually fixes the "scattered" or jumping effect. */
-                background-attachment: scroll;
-                
-                /* Ensures the background stays put even if the content is short */
-                min-height: 100vh;
-            }
         }
     </style>
 </head>
