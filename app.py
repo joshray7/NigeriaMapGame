@@ -11,7 +11,6 @@ from sqlalchemy import text
 app = Flask(__name__)
 load_dotenv()
 
-
 # ==========================
 # SECRET KEY (SAFE)
 # ==========================
@@ -46,6 +45,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 migrate = Migrate(app, db)
+
 # ==========================
 # MODELS
 # ==========================
@@ -113,7 +113,6 @@ def signup():
 
     return render_template("signup.html")
 
-
 # ---------- LOGIN ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -132,7 +131,6 @@ def login():
         error = "Invalid username or password."
 
     return render_template("login.html", error=error)
-
 
 # ---------- GAME ----------
 @app.route("/game")
@@ -161,7 +159,6 @@ def game():
         print("GAME ERROR:", e)
         return "Something went wrong in /game", 500
 
-
 # ---------- SAVE ----------
 @app.route("/save_progress", methods=["POST"])
 @csrf.exempt  # Exempting CSRF for this API endpoint since it's called via JS fetch
@@ -172,8 +169,8 @@ def save_progress():
     data = request.get_json() or {}
     guessed_states = data.get("guessed_states", [])
     
-    print("SAVE PROGRESS CALLED")           # ✅ add this
-    print("guessed_states:", guessed_states) # ✅ add this
+    print("SAVE PROGRESS CALLED") 
+    print("guessed_states:", guessed_states)
 
     progress = Progress.query.filter_by(user_id=session["user_id"]).first()
 
@@ -184,15 +181,15 @@ def save_progress():
     progress.guessed_states = json.dumps(guessed_states or [])
     score = len(guessed_states)
     
-    print("score:", score)                   # ✅ add this
-    print("current high_score:", progress.high_score) # ✅ add this
+    print("score:", score)
+    print("current high_score:", progress.high_score) 
     
     if score > progress.high_score:
         progress.high_score = score
     progress.last_score = score
 
     db.session.commit()
-    print("DB committed successfully")       # ✅ add this
+    print("DB committed successfully")
     return jsonify({"status": "ok"})
 
 # ---------- LEADERBOARD ----------
@@ -250,19 +247,16 @@ def reset_game():
 
     return jsonify(success=True)
 
-
 # ---------- STATE ----------
 @app.route("/state/<state_name>")
 def show_description(state_name):
     return render_template("state.html", state_name=state_name.title())
-
 
 # ---------- LOGOUT ----------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
-
 
 # ==========================
 # RUN
